@@ -1,36 +1,18 @@
-import type { Env, GitHubFileContent } from "../types";
-import { SLUG_PATTERN, DIR, BRANCH } from "../types";
-import { json, errorResponse } from "../lib/http";
-import { gh, fromBase64Utf8, fetchAllDishes } from "../lib/github";
+import type { Env } from "../types";
+import { SLUG_PATTERN } from "../types";
+import { json, rawJson, errorResponse } from "../lib/http";
+import { getCountriesPayload, getCountryPayload, getDishesPayload } from "../lib/cache";
 import { getVisitCounter, type PageKind } from "../lib/analytics";
 import { hmacSign } from "../lib/crypto";
 
 // GET /
 export async function handleRoot(env: Env): Promise<Response> {
-  const dishes = await fetchAllDishes(env);
-  const bySlug = new Map<
-    string,
-    { slug: string; name: string; continentSlug: string; dishCount: number }
-  >();
-  for (const dish of dishes) {
-    const existing = bySlug.get(dish.countrySlug);
-    if (existing) {
-      existing.dishCount += 1;
-    } else {
-      bySlug.set(dish.countrySlug, {
-        slug: dish.countrySlug,
-        name: dish.country,
-        continentSlug: dish.continentSlug,
-        dishCount: 1,
-      });
-    }
-  }
-  return json({ countries: [...bySlug.values()] });
+  return rawJson(await getCountriesPayload(env));
 }
 
 // GET /dishes
 export async function handleDishes(env: Env): Promise<Response> {
-  return json(await fetchAllDishes(env));
+  return rawJson(await getDishesPayload(env));
 }
 
 // GET /countries/{slug}
@@ -39,17 +21,11 @@ export async function handleCountryBySlug(env: Env, slug: string): Promise<Respo
     return errorResponse(400, "invalid_slug", "Country slug must match ^[a-z0-9-]+$.");
   }
 
-  const res = await gh(env, `contents/${DIR}/${slug}.json?ref=${BRANCH}`);
-  if (res.status === 404) {
+  const result = await getCountryPayload(env, slug);
+  if (result.status === "not_found") {
     return errorResponse(404, "not_found", `No recipe data for country "${slug}".`);
   }
-  if (!res.ok) {
-    return errorResponse(502, "github_error", `GitHub API returned ${res.status}.`);
-  }
-  const meta = (await res.json()) as GitHubFileContent;
-  return json(JSON.parse(fromBase64Utf8(meta.content)), 200, {
-    "X-Data-Sha": meta.sha,
-  });
+  return rawJson(result.payload, 200, { "X-Data-Sha": result.sha });
 }
 
 const BOT_USER_AGENT =

@@ -26,6 +26,15 @@ export class UnauthorizedError extends AdminApiError {
   }
 }
 
+// Shape of the Worker's error JSON (worker/lib/http.ts's errorResponse) — the
+// success-body shape varies per endpoint, hence `unknown` on the happy path
+// below (callers cast via the generic <T>), but the error shape is fixed.
+interface ApiErrorBody {
+  error?: string;
+  message?: string;
+  details?: ValidationIssue[];
+}
+
 interface RequestOptions {
   method?: string;
   body?: unknown;
@@ -54,11 +63,17 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   const body = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    const errorBody = body as ApiErrorBody;
     if (res.status === 401) {
       clearStoredSession();
-      throw new UnauthorizedError(body.message ?? "Session expired.");
+      throw new UnauthorizedError(errorBody.message ?? "Session expired.");
     }
-    throw new AdminApiError(res.status, body.error ?? "unknown_error", body.message ?? "Request failed.", body.details);
+    throw new AdminApiError(
+      res.status,
+      errorBody.error ?? "unknown_error",
+      errorBody.message ?? "Request failed.",
+      errorBody.details,
+    );
   }
 
   return body as T;

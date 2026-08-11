@@ -5,6 +5,10 @@ export interface Env {
   SESSION_SECRET: string;
   // Admin credentials + login-throttle state ("admin:"-prefixed keys).
   ANALYTICS: KVNamespace;
+  // Content-addressed cache of merged recipe data (worker/lib/cache.ts) — keyed
+  // by a hash of each recipe file's git sha, so it never serves stale data and
+  // never needs a TTL-driven invalidation.
+  DATA_CACHE: KVNamespace;
   // Section 10 visit counters (routes/public.ts, worker/VisitCounter.ts) — a
   // SQLite-backed Durable Object, not KV, so per-view writes never hit KV's
   // 1-write-per-second-per-key or 1,000-writes/day free-plan limits.
@@ -303,6 +307,7 @@ export interface GitHubContentItem {
   name: string;
   path: string;
   type: "file" | "dir";
+  sha: string;
 }
 
 export interface GitHubFileContent {

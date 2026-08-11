@@ -36,20 +36,28 @@ export function gh(env: Env, path: string, init: RequestInit = {}): Promise<Resp
 }
 
 /**
- * Reads recipes/{filename}, returns its parsed dish array. Throws if the file is missing.
- * Uses the raw media type rather than the default JSON+base64 response: GitHub's Contents
- * API only inlines `content` for files under 1MB, and country files (e.g. bangladesh.json
- * with full Section 4-23 content for 50+ dishes) now exceed that. The raw media type
- * supports files up to 100MB.
+ * Reads recipes/{filename}, returns its raw JSON text unparsed. Throws if the file is
+ * missing. Uses the raw media type rather than the default JSON+base64 response: GitHub's
+ * Contents API only inlines `content` for files under 1MB, and country files (e.g.
+ * bangladesh.json with full Section 4-23 content for 50+ dishes) now exceed that. The raw
+ * media type supports files up to 100MB.
+ *
+ * Split out from fetchCountryFile so worker/lib/cache.ts can cache a single country's
+ * payload without a parse+re-stringify round-trip when no merging across files is needed.
  */
-export async function fetchCountryFile(env: Env, filename: string): Promise<Dish[]> {
+export async function fetchCountryFileRaw(env: Env, filename: string): Promise<string> {
   const res = await gh(env, `contents/${DIR}/${filename}?ref=${BRANCH}`, {
     headers: { Accept: "application/vnd.github.raw+json" },
   });
   if (!res.ok) {
     throw new Error(`failed to read ${filename}: ${res.status}`);
   }
-  return JSON.parse(await res.text()) as Dish[];
+  return res.text();
+}
+
+/** Reads recipes/{filename}, returns its parsed dish array. Throws if the file is missing. */
+export async function fetchCountryFile(env: Env, filename: string): Promise<Dish[]> {
+  return JSON.parse(await fetchCountryFileRaw(env, filename)) as Dish[];
 }
 
 /**
@@ -110,20 +118,37 @@ export async function writeCountryFile(
   return { sha: body.content.sha };
 }
 
-/** Lists recipes/*.json filenames (without fetching content). [] if the dir doesn't exist. */
-export async function listCountryFiles(env: Env): Promise<string[]> {
+/**
+ * Lists recipes/*.json with each file's git sha (without fetching content).
+ * [] if the dir doesn't exist. The sha is what worker/lib/cache.ts hashes
+ * into a content-addressed cache key — it changes exactly when a file's
+ * content changes, so it doubles as a free, always-fresh cache-invalidation
+ * signal with no TTL involved.
+ */
+export async function listCountryFilesWithSha(
+  env: Env,
+): Promise<{ name: string; sha: string }[]> {
   const listRes = await gh(env, `contents/${DIR}?ref=${BRANCH}`);
   if (listRes.status === 404) return [];
   if (!listRes.ok) {
     throw new Error(`failed to list ${DIR}: ${listRes.status}`);
   }
   const items = (await listRes.json()) as GitHubContentItem[];
-  return items.filter((item) => item.type === "file" && item.name.endsWith(".json")).map((item) => item.name);
+  return items
+    .filter((item) => item.type === "file" && item.name.endsWith(".json"))
+    .map((item) => ({ name: item.name, sha: item.sha }));
+}
+
+/** Lists recipes/*.json filenames (without fetching content). [] if the dir doesn't exist. */
+export async function listCountryFiles(env: Env): Promise<string[]> {
+  return (await listCountryFilesWithSha(env)).map((item) => item.name);
 }
 
 // Lists recipes/*.json and fetches every file's content in parallel.
 // Returns [] (not an error) when the directory doesn't exist yet — that is
 // the expected state before any data has been seeded.
+// Uncached — direct GitHub reads. Used by worker/lib/cache.ts on a cache
+// miss, and by the admin panel (routes/admin.ts) which needs live data.
 export async function fetchAllDishes(env: Env): Promise<Dish[]> {
   const files = await listCountryFiles(env);
   const perFile = await Promise.all(files.map((file) => fetchCountryFile(env, file)));

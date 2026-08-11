@@ -30,5 +30,13 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "worker"]
+  // worker-configuration.d.ts: `wrangler types` (see worker/tsconfig.json,
+  // package.json's worker:* scripts) generates this at the repo root, not
+  // inside worker/ — the bare "worker" exclude below doesn't reach it. Left
+  // unexcluded, its ambient Workers-runtime globals pull the whole worker/
+  // tree (Workers-only APIs, a separate strict/types config) into this
+  // build's type-check and fail it on errors that only matter under
+  // worker/tsconfig.json. Gitignored; regenerate locally with `npm run
+  // worker:dev` or `wrangler types` as needed.
+  "exclude": ["node_modules", "worker", "worker-configuration.d.ts"]
 }

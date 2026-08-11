@@ -34,9 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
-# wrangler (Cloudflare Worker local secrets)
+# wrangler (Cloudflare Worker local secrets + generated types)
 .dev.vars
 .wrangler
+worker-configuration.d.ts
 
 # vercel
 .vercel

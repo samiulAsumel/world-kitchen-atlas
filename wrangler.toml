@@ -7,6 +7,13 @@ compatibility_date = "2026-07-28"
 binding = "ANALYTICS"
 id = "ec7d5dbcc7ef4089bdae873701eb7d27"
 
+# Content-addressed cache of merged recipe data (worker/lib/cache.ts) — keys
+# hash each recipe file's git sha, so cached entries never go stale and never
+# need TTL-driven invalidation; see that file's header for the full rationale.
+[[kv_namespaces]]
+binding = "DATA_CACHE"
+id = "6d5c5bc094704e3794e6c216c42e0ffa"
+
 # Section 10 visit counters — SQLite-backed Durable Object, not KV: KV caps
 # writes at 1/second per key and 1,000/day on the free plan, both of which a
 # per-pageview counter on "visits:total" would hit under real traffic.

@@ -84,4 +84,13 @@ export async function hmacVerify(secret: string, payload: string, signature: str
   }
 }
 
+// Hex digest used for content-addressed KV cache keys (worker/lib/cache.ts) —
+// hex rather than base64url purely so keys are easy to read/grep in the KV dashboard.
+export async function sha256Hex(payload: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export { toBase64Url, fromBase64Url };
