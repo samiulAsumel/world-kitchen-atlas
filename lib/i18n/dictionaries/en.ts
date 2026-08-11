@@ -27,6 +27,8 @@ export const en = {
     heroParagraph:
       "A global culinary encyclopedia — continent, country, and dish — with the history, occasion, and traditional drink pairing behind every entry.",
     featuredDishes: "Featured dishes",
+    pauseRotation: "Pause",
+    resumeRotation: "Resume",
     exploreByContinent: "Explore by continent",
     browseByMealTime: "Browse by meal time",
     countryCount: (n: number): string => (n === 1 ? "country" : "countries"),

@@ -31,6 +31,8 @@ export const bn: Dictionary = {
     heroParagraph:
       "একটি বৈশ্বিক রন্ধন বিশ্বকোষ — মহাদেশ, দেশ ও পদ — প্রতিটি এন্ট্রির পেছনের ইতিহাস, উপলক্ষ ও ঐতিহ্যবাহী পানীয়ের সংযোগসহ।",
     featuredDishes: "বাছাই করা পদ",
+    pauseRotation: "থামান",
+    resumeRotation: "চালু করুন",
     exploreByContinent: "মহাদেশ অনুসারে ঘুরে দেখুন",
     browseByMealTime: "খাবারের সময় অনুসারে ব্রাউজ করুন",
     countryCount: () => "দেশ",

@@ -3,7 +3,8 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { DishGrid } from "@/components/dish/DishGrid";
-import { getLocaleFromPathname } from "@/lib/i18n";
+import { Button } from "@/components/ui/Button";
+import { getDictionary, getLocaleFromPathname } from "@/lib/i18n";
 import type { DishCardFields } from "@/lib/types/recipe";
 
 interface RotatingFeaturedDishesProps {
@@ -39,44 +40,60 @@ export function RotatingFeaturedDishes({
   intervalMs = 13000,
 }: RotatingFeaturedDishesProps): React.JSX.Element | null {
   const locale = getLocaleFromPathname(usePathname());
+  const dict = getDictionary(locale);
   const [featured, setFeatured] = useState(initialDishes);
-  const pausedRef = useRef(false);
+  // Explicit user pause (the button below) — WCAG 2.2.2 "Pause, Stop, Hide"
+  // wants a real, visible control for this, for every visitor, not just
+  // reduced-motion ones. Reduced-motion itself is handled separately, below.
+  const [userPaused, setUserPaused] = useState(false);
+  // Hover/focus is a courtesy auto-pause, not a user decision — kept out of
+  // state (a ref) so mouse movement doesn't trigger re-renders.
+  const hoverPausedRef = useRef(false);
 
   useEffect(() => {
-    // WCAG 2.2.2 "Pause, Stop, Hide" — content that auto-updates for more
-    // than 5s must be stoppable. Honoring reduced-motion by skipping the
-    // rotation entirely (not just softening the CSS transition, which
-    // app/globals.css already does) is the cleanest way to satisfy that.
-    // Nothing meaningful to rotate into if the pool isn't bigger than what's
-    // already shown.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (pool.length <= count) return;
+    if (userPaused) return;
+    if (pool.length <= count) return; // nothing meaningful to rotate into
 
     const id = window.setInterval(() => {
-      if (pausedRef.current || document.hidden) return;
+      if (hoverPausedRef.current || document.hidden) return;
       setFeatured(sampleRandom(pool, count));
     }, intervalMs);
 
     return () => window.clearInterval(id);
-    // pool/count/intervalMs are the homepage's static inputs, not expected to
-    // change after mount — deliberately run this effect once, not per-render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userPaused, pool, count, intervalMs]);
 
   if (featured.length === 0) return null;
+
+  const canRotate = pool.length > count;
 
   return (
     <section
       aria-labelledby="featured-heading"
       className="flex flex-col gap-6"
-      onMouseEnter={() => (pausedRef.current = true)}
-      onMouseLeave={() => (pausedRef.current = false)}
-      onFocus={() => (pausedRef.current = true)}
-      onBlur={() => (pausedRef.current = false)}
+      onMouseEnter={() => (hoverPausedRef.current = true)}
+      onMouseLeave={() => (hoverPausedRef.current = false)}
+      onFocus={() => (hoverPausedRef.current = true)}
+      onBlur={() => (hoverPausedRef.current = false)}
     >
-      <h2 id="featured-heading" className="font-display text-2xl text-ink">
-        {heading}
-      </h2>
+      <div className="flex items-center justify-between gap-4">
+        <h2 id="featured-heading" className="font-display text-2xl text-ink">
+          {heading}
+        </h2>
+        {/* Reduced-motion visitors still get rotation (just an instant swap —
+            app/globals.css already collapses the fade-up animation to ~0 for
+            them) rather than losing the feature outright; this button is
+            what actually satisfies "Pause, Stop, Hide" for everyone. */}
+        {canRotate && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setUserPaused((prev) => !prev)}
+            aria-pressed={userPaused}
+          >
+            {userPaused ? dict.home.resumeRotation : dict.home.pauseRotation}
+          </Button>
+        )}
+      </div>
       {/* No aria-live: announcing a silent content refresh to screen readers
           every 13s would be far more disruptive than saying nothing. */}
       <DishGrid dishes={featured} locale={locale} preserveOrder />
