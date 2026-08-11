@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter, IBM_Plex_Mono, Noto_Sans_Bengali } from "next/font/google";
 import { ContentProtection } from "@/components/layout/ContentProtection";
 import { VisitBeacon } from "@/components/layout/VisitBeacon";
@@ -43,6 +43,12 @@ export const metadata: Metadata = {
   },
   description:
     "A global culinary encyclopedia organized by continent, country, and dish — with history, occasion, and traditional drink pairings for every entry.",
+};
+
+// Tints the mobile browser chrome (address bar) — separate from
+// manifest.ts's theme_color, which only applies once installed as a PWA.
+export const viewport: Viewport = {
+  themeColor: "#120e0a",
 };
 
 export default function RootLayout({

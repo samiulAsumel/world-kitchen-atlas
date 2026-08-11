@@ -7,7 +7,9 @@
     "build": "node node_modules/next/dist/bin/next build",
     "lint": "node node_modules/eslint/bin/eslint.js .",
     "worker:dev": "node node_modules/wrangler/bin/wrangler.js dev",
-    "worker:deploy": "node node_modules/wrangler/bin/wrangler.js deploy"
+    "worker:deploy": "node node_modules/wrangler/bin/wrangler.js deploy",
+    "optimize-images": "node scripts/optimize-images.mjs",
+    "generate-icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "fuse.js": "^7.5.0",
@@ -30,6 +32,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4"

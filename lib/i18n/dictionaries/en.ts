@@ -26,6 +26,7 @@ export const en = {
     title: "World Kitchen Atlas",
     heroParagraph:
       "A global culinary encyclopedia — continent, country, and dish — with the history, occasion, and traditional drink pairing behind every entry.",
+    featuredDishes: "Featured dishes",
     exploreByContinent: "Explore by continent",
     browseByMealTime: "Browse by meal time",
     countryCount: (n: number): string => (n === 1 ? "country" : "countries"),

@@ -3,9 +3,10 @@ import Link from "next/link";
 import { AtlasPin } from "@/components/atlas/AtlasPin";
 import { AtlasRule } from "@/components/atlas/AtlasRule";
 import { SearchBar } from "@/components/home/SearchBar";
+import { DishGrid } from "@/components/dish/DishGrid";
 import { bn as dict } from "@/lib/i18n/dictionaries/bn";
 import { localizeContinentName, MEAL_TIME_LABELS, localizeOccasionName } from "@/lib/i18n/labels";
-import { CONTINENTS, MEAL_TIMES, OCCASIONS } from "@/lib/constants";
+import { CONTINENTS, FEATURED_DISH_SLUGS, MEAL_TIMES, OCCASIONS } from "@/lib/constants";
 import { getAllDishes, getCountries } from "@/lib/data/source";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -18,6 +19,10 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default async function HomePageBn(): Promise<React.JSX.Element> {
   const [countries, dishes] = await Promise.all([getCountries(), getAllDishes()]);
+
+  const featuredDishes = FEATURED_DISH_SLUGS.map(({ countrySlug, slug }) =>
+    dishes.find((dish) => dish.countrySlug === countrySlug && dish.slug === slug),
+  ).filter((dish) => dish !== undefined);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-16">
@@ -32,6 +37,15 @@ export default async function HomePageBn(): Promise<React.JSX.Element> {
         <AtlasRule className="w-full" />
         <SearchBar />
       </section>
+
+      {featuredDishes.length > 0 && (
+        <section aria-labelledby="featured-heading" className="flex flex-col gap-6">
+          <h2 id="featured-heading" className="font-display text-2xl text-ink">
+            {dict.home.featuredDishes}
+          </h2>
+          <DishGrid dishes={featuredDishes} locale="bn" preserveOrder />
+        </section>
+      )}
 
       <section aria-labelledby="continents-heading" className="flex flex-col gap-6">
         <h2 id="continents-heading" className="font-display text-2xl text-ink">

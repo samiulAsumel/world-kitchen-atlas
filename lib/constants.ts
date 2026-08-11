@@ -15,6 +15,21 @@ export const MEAL_TIMES = [
   { slug: "drinks", name: "Drinks" },
 ] as const;
 
+// Hand-picked for the homepage's featured-dishes section — curated for visual
+// range (biryani, a whole roast, grilled, a dosa, two contrasting desserts,
+// street food) across all three live countries, not just "biggest photo".
+// Order is preserved as-is (DishGrid's preserveOrder) rather than A-Z sorted.
+export const FEATURED_DISH_SLUGS: { countrySlug: string; slug: string }[] = [
+  { countrySlug: "pakistan", slug: "karachi-biryani" },
+  { countrySlug: "india", slug: "hyderabadi-biryani" },
+  { countrySlug: "pakistan", slug: "sajji" },
+  { countrySlug: "india", slug: "masala-dosa" },
+  { countrySlug: "bangladesh", slug: "fuchka" },
+  { countrySlug: "pakistan", slug: "chicken-tikka" },
+  { countrySlug: "india", slug: "gulab-jamun" },
+  { countrySlug: "bangladesh", slug: "rasgulla" },
+] as const;
+
 export const OCCASIONS = [
   { slug: "street-food", name: "Street Food" },
   { slug: "festival-food", name: "Festival Food" },
