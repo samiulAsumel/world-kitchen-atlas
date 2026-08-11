@@ -3,9 +3,10 @@ import Link from "next/link";
 import { AtlasPin } from "@/components/atlas/AtlasPin";
 import { AtlasRule } from "@/components/atlas/AtlasRule";
 import { SearchBar } from "@/components/home/SearchBar";
-import { DishGrid } from "@/components/dish/DishGrid";
+import { RotatingFeaturedDishes } from "@/components/home/RotatingFeaturedDishes";
 import { CONTINENTS, FEATURED_DISH_SLUGS, MEAL_TIMES, OCCASIONS } from "@/lib/constants";
 import { getAllDishes, getCountries } from "@/lib/data/source";
+import { toDishCardFields } from "@/lib/data/dishCardFields";
 import { buildPageMetadata } from "@/lib/seo";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -19,9 +20,12 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function HomePage(): Promise<React.JSX.Element> {
   const [countries, dishes] = await Promise.all([getCountries(), getAllDishes()]);
 
-  const featuredDishes = FEATURED_DISH_SLUGS.map(({ countrySlug, slug }) =>
+  const initialFeatured = FEATURED_DISH_SLUGS.map(({ countrySlug, slug }) =>
     dishes.find((dish) => dish.countrySlug === countrySlug && dish.slug === slug),
-  ).filter((dish) => dish !== undefined);
+  )
+    .filter((dish) => dish !== undefined)
+    .map(toDishCardFields);
+  const featuredPool = dishes.filter((dish) => dish.heroImage).map(toDishCardFields);
 
   return (
     <main className="mx-auto flex max-w-6xl flex-col gap-16 px-6 py-16">
@@ -40,14 +44,11 @@ export default async function HomePage(): Promise<React.JSX.Element> {
         <SearchBar />
       </section>
 
-      {featuredDishes.length > 0 && (
-        <section aria-labelledby="featured-heading" className="flex flex-col gap-6">
-          <h2 id="featured-heading" className="font-display text-2xl text-ink">
-            Featured dishes
-          </h2>
-          <DishGrid dishes={featuredDishes} preserveOrder />
-        </section>
-      )}
+      <RotatingFeaturedDishes
+        heading="Featured dishes"
+        initialDishes={initialFeatured}
+        pool={featuredPool}
+      />
 
       <section aria-labelledby="continents-heading" className="flex flex-col gap-6">
         <h2 id="continents-heading" className="font-display text-2xl text-ink">

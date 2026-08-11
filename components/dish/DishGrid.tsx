@@ -1,9 +1,9 @@
 import { DishCard } from "@/components/dish/DishCard";
 import { getDictionary, type Locale } from "@/lib/i18n";
-import type { DishEntry } from "@/lib/types/recipe";
+import type { DishCardFields } from "@/lib/types/recipe";
 
 interface DishGridProps {
-  dishes: DishEntry[];
+  dishes: DishCardFields[];
   emptyMessage?: string;
   locale?: Locale;
   /** Skip alphabetical sorting and render `dishes` in the order given — for
@@ -12,7 +12,7 @@ interface DishGridProps {
   preserveOrder?: boolean;
 }
 
-function dishSortName(dish: DishEntry, locale: Locale): string {
+function dishSortName(dish: DishCardFields, locale: Locale): string {
   return locale === "bn" ? (dish.translations?.bn?.name ?? dish.name) : dish.name;
 }
 

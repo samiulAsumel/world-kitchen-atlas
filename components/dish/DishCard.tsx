@@ -5,10 +5,10 @@ import { DishPlaceholderArt } from "@/components/dish/DishPlaceholderArt";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { DIFFICULTY_LABELS, localizeCountryName } from "@/lib/i18n/labels";
 import { formatMinutesLabel } from "@/lib/recipe/timers";
-import type { DishEntry } from "@/lib/types/recipe";
+import type { DishCardFields } from "@/lib/types/recipe";
 
 interface DishCardProps {
-  dish: DishEntry;
+  dish: DishCardFields;
   locale?: Locale;
 }
 

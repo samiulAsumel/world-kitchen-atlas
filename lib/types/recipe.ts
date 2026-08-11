@@ -351,6 +351,29 @@ export function isFullRecipe(entry: DishEntry): entry is FullRecipe {
   );
 }
 
+/** Exactly the fields components/dish/DishCard.tsx reads. A full DishEntry
+ * satisfies this structurally, so every existing DishCard/DishGrid caller
+ * keeps working unchanged — this only narrows what a caller is REQUIRED to
+ * provide, letting a caller pass a lighter projection instead of a full
+ * DishEntry (see lib/data/dishCardFields.ts) when it doesn't need/want to
+ * ship full-recipe content (steps/ingredients/equipment) to the client. */
+export type DishCardFields = Pick<
+  DishEntry,
+  | "id"
+  | "slug"
+  | "name"
+  | "country"
+  | "countrySlug"
+  | "continentSlug"
+  | "shortDescription"
+  | "heroImage"
+  | "totalTimeMinutes"
+  | "difficulty"
+  | "fullRecipeAvailable"
+  | "confidenceLevel"
+  | "translations"
+>;
+
 export interface CountrySummary {
   slug: string;
   name: string;
